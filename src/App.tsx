@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Atmosphere } from './components/Atmosphere'
 import { Icon } from './components/Icon'
 import { AssetStudio } from './components/AssetStudio'
+import { fadeOutActiveAudio } from './components/AudioPlayer'
 import { useMediaLibrary } from './lib/media'
 import { PHOTO_SLOTS } from './lib/slots'
 import { Scene1Greeting } from './scenes/Scene1Greeting'
@@ -29,6 +30,7 @@ export default function App() {
   const [showIdle, setShowIdle] = useState(false)
   const [studioOpen, setStudioOpen] = useState(() => window.location.hash === '#studio')
   const transitionTimer = useRef(0)
+  const reduce = useReducedMotion()
   const { media, config, refreshMedia, refreshConfig } = useMediaLibrary()
 
   useEffect(() => {
@@ -57,6 +59,9 @@ export default function App() {
   }, [scene])
 
   const go = useCallback((next: number) => {
+    // Fade whatever is playing before the scene swaps, so music and voice never
+    // cut off mid-phrase.
+    fadeOutActiveAudio()
     const advance = () => {
       setScene(next)
       setShowIdle(false)
@@ -69,10 +74,13 @@ export default function App() {
     }
     clearTimeout(transitionTimer.current)
     setTransition(line)
+    // Give the line time to read, then let the veil leave completely before the
+    // next scene appears, so the message gets its own moment instead of landing
+    // on top of the scene behind it.
     transitionTimer.current = window.setTimeout(() => {
       setTransition(null)
-      advance()
-    }, 2600)
+      transitionTimer.current = window.setTimeout(advance, 600)
+    }, 4200)
   }, [])
 
   const closeStudio = useCallback(() => {
@@ -165,16 +173,34 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.5 }}
           >
-            <motion.p
-              className="script"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.2 }}
-            >
-              {transition}
-            </motion.p>
+            <p className="script">
+              {reduce ? (
+                transition
+              ) : (
+                <>
+                  {/* One full line for screen readers; the words below only dance. */}
+                  <span className="visually-hidden">{transition}</span>
+                  {transition.split(' ').map((word, index) => (
+                    <motion.span
+                      key={`${index}-${word}`}
+                      className="veil-word"
+                      aria-hidden="true"
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.45,
+                        delay: 0.38 + index * 0.065,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    >
+                      {index > 0 ? ` ${word}` : word}
+                    </motion.span>
+                  ))}
+                </>
+              )}
+            </p>
           </motion.div>
         ) : null}
       </AnimatePresence>

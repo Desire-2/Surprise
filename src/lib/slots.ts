@@ -18,9 +18,9 @@ export const SLOT_LABELS: Record<MediaSlot, string> = {
 }
 
 export const AUDIO_FILES: Record<AudioSlot, string[]> = {
-  'music-1': ['music1.mp3', 'music-1.mp3', 'music-1.wav', 'music-1.m4a', 'music-1.ogg'],
-  voice: ['recording.m4a', 'voice-message.mp3', 'voice-message.wav', 'voice-message.m4a', 'voice-message.ogg'],
-  'music-2': ['music 2.mp3', 'music-2.mp3', 'music-2.wav', 'music-2.m4a', 'music-2.ogg'],
+  'music-1': ['music1.m4a', 'music1.mp3', 'music-1.m4a', 'music-1.mp3', 'music-1.wav', 'music-1.ogg'],
+  voice: ['recording.m4a', 'voice-message.m4a', 'voice-message.mp3', 'voice-message.wav', 'voice-message.ogg'],
+  'music-2': ['music-2.m4a', 'music 2.m4a', 'music-2.mp3', 'music 2.mp3', 'music-2.wav', 'music-2.ogg'],
 }
 
 export const PHOTO_FILES: Record<PhotoSlot, string[]> = {

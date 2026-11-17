@@ -25,7 +25,7 @@ export function Scene3Music({ src, onContinue }: Props) {
 
   useEffect(() => {
     if (!ready) return
-    const timer = setTimeout(() => setFinished(true), src ? 12000 : 1200)
+    const timer = setTimeout(() => setFinished(true), src ? 25000 : 4000)
     return () => clearTimeout(timer)
   }, [src, ready])
 

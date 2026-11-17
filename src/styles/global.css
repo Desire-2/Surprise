@@ -307,24 +307,41 @@ body:has(.scene--celebrate) .backdrop-glow {
 .transition-veil .script {
   max-width: 20ch;
   font-size: clamp(28px, 8vw, 42px);
+  text-align: center;
+}
+
+.veil-word {
+  display: inline-block;
+  white-space: pre;
 }
 
 .idle-note {
   position: fixed;
   z-index: 10;
-  left: 50%;
-  bottom: max(20px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: calc(100vw - 32px);
+  /* A slim strip along the bottom edge instead of a floating pill.
+     - Centering with translateX is impossible here: framer-motion writes its
+       own inline transform for the entrance animation and would wipe it out.
+     - A pill sat right on top of the scene's last button on small screens;
+       this tucks under it, and pointer-events keeps every tap working. */
+  left: 0;
+  right: 0;
+  bottom: 0;
   margin: 0;
-  padding: 10px 18px;
-  border-radius: 999px;
-  border: 1px solid var(--line-soft);
-  background: rgba(11, 5, 8, 0.86);
+  padding: 9px 16px;
+  padding-bottom: calc(9px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line-soft);
+  border-radius: 14px 14px 0 0;
+  background: rgba(11, 5, 8, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.35);
   color: var(--faint);
-  font-size: 12px;
+  font-size: clamp(11px, 3.1vw, 12px);
+  line-height: 1.4;
   text-align: center;
+  text-wrap: balance;
+  pointer-events: none;
+  user-select: none;
 }
 
 .scene-inner {
@@ -903,6 +920,17 @@ body:has(.scene--celebrate) .backdrop-glow {
   color: var(--blush);
 }
 
+.audio-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-soft);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .cake-stage {
   position: relative;
   width: 100%;
@@ -1159,6 +1187,11 @@ body:has(.scene--celebrate) .backdrop-glow {
   .display { font-size: 36px; }
   .btn { padding: 12px 20px; font-size: 12px; }
   .volume-range { width: 56px; }
+  .idle-note {
+    padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    font-size: 11px;
+  }
 }
 
 @media (min-width: 768px) {

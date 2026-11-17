@@ -16,11 +16,11 @@ export function Scene7Call({ phoneNumber, phoneWasSet, onReplay }: Props) {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStage(1), 1700),
-      setTimeout(() => setStage(2), 3600),
-      setTimeout(() => setStage(3), 5600),
-      setTimeout(() => setStage(4), 7400),
-      setTimeout(() => setStage(5), 9600),
+      setTimeout(() => setStage(1), 3000),
+      setTimeout(() => setStage(2), 6500),
+      setTimeout(() => setStage(3), 10000),
+      setTimeout(() => setStage(4), 13500),
+      setTimeout(() => setStage(5), 17500),
     ]
     return () => timers.forEach(clearTimeout)
   }, [])

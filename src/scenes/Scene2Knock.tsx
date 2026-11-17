@@ -50,8 +50,8 @@ export function Scene2Knock({ onComplete }: Props) {
   const [away, setAway] = useState(false)
 
   useEffect(() => {
-    const first = setTimeout(() => setStage(1), 1800)
-    const second = setTimeout(() => setStage(2), 3600)
+    const first = setTimeout(() => setStage(1), 3200)
+    const second = setTimeout(() => setStage(2), 7000)
     return () => {
       clearTimeout(first)
       clearTimeout(second)

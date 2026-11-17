@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FILES_BY_SLOT, type MediaSlot } from './slots'
+import { AUDIO_SLOTS, FILES_BY_SLOT, type MediaSlot } from './slots'
 
 const DB_NAME = 'pinnacle-media'
 const DB_VERSION = 1
@@ -87,20 +87,41 @@ function revokeObjectUrl(key: MediaSlot) {
 
 const staticUrlCache = new Map<MediaSlot, string | null>()
 
+async function fileExists(url: string): Promise<boolean> {
+  try {
+    const head = await fetch(url, { method: 'HEAD', cache: 'no-store' })
+    if (head.ok) {
+      const type = head.headers.get('content-type') || ''
+      // A single-page host answers unknown paths with its HTML shell.
+      return !type.includes('text/html')
+    }
+  } catch {
+    // Some hosts reject HEAD; fall through to a one-byte ranged GET.
+  }
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { Range: 'bytes=0-0' },
+      cache: 'no-store',
+    })
+    const type = response.headers.get('content-type') || ''
+    // Never let a host that ignores Range stream the whole file just to probe it.
+    void response.body?.cancel().catch(() => undefined)
+    if (response.ok || response.status === 206) return !type.includes('text/html')
+  } catch {
+    // A missing file simply falls through to the next candidate.
+  }
+  return false
+}
+
 async function findStaticUrl(key: MediaSlot): Promise<string | null> {
   if (staticUrlCache.has(key)) return staticUrlCache.get(key) ?? null
   const base = import.meta.env.BASE_URL || './'
   for (const file of FILES_BY_SLOT[key]) {
     const url = `${base}media/${encodeURIComponent(file)}`
-    try {
-      const response = await fetch(url, { method: 'HEAD', cache: 'no-store' })
-      const type = response.headers.get('content-type') || ''
-      if (response.ok && !type.includes('text/html')) {
-        staticUrlCache.set(key, url)
-        return url
-      }
-    } catch {
-      // A missing file simply falls through to the next candidate.
+    if (await fileExists(url)) {
+      staticUrlCache.set(key, url)
+      return url
     }
   }
   staticUrlCache.set(key, null)
@@ -162,12 +183,29 @@ export function savePhoneNumber(value: string) {
   }
 }
 
+const prefetched = new Set<string>()
+const prefetchPool: HTMLAudioElement[] = []
+
+/** Start buffering audio early; the elements are kept alive so the fetch finishes. */
+export function prefetchAudio(url: string | null | undefined) {
+  if (!url || prefetched.has(url)) return
+  prefetched.add(url)
+  const element = new Audio()
+  element.preload = 'auto'
+  element.src = url
+  prefetchPool.push(element)
+}
+
 export function useMediaLibrary() {
   const [media, setMedia] = useState<Record<MediaSlot, MediaResolution> | null>(null)
   const [config, setConfig] = useState<AppConfig>({ phoneNumber: '', phoneWasSet: false })
 
   const refreshMedia = useCallback(async () => {
-    setMedia(await loadAllMedia())
+    const next = await loadAllMedia()
+    setMedia(next)
+    // Buffer the soundtrack and the voice during the opening scene, so both
+    // start the moment she reaches them instead of waiting on the network.
+    for (const slot of AUDIO_SLOTS) prefetchAudio(next[slot]?.url)
   }, [])
 
   const refreshConfig = useCallback(async () => {

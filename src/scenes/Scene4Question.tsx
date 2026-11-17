@@ -27,20 +27,27 @@ export function Scene4Question({ onContinue }: Props) {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStage(1), 1200),
-      setTimeout(() => setStage(2), 2700),
-      setTimeout(() => setStage(3), 4400),
+      setTimeout(() => setStage(1), 2200),
+      setTimeout(() => setStage(2), 5000),
+      setTimeout(() => setStage(3), 8000),
     ]
     return () => timers.forEach(clearTimeout)
   }, [])
 
   useEffect(() => () => recognitionRef.current?.abort(), [])
 
+  // Read through a ref so an App re-render (idle note, transition veil) cannot
+  // restart the countdown below.
+  const continueRef = useRef(onContinue)
+  useEffect(() => {
+    continueRef.current = onContinue
+  })
+
   useEffect(() => {
     if (!submitted) return
-    const timer = setTimeout(onContinue, 4200)
+    const timer = setTimeout(() => continueRef.current(), 15000)
     return () => clearTimeout(timer)
-  }, [submitted, onContinue])
+  }, [submitted])
 
   function toggleMic() {
     if (listening) {

@@ -12,19 +12,32 @@ type Props = {
 export function Scene5Voice({ src, onContinue }: Props) {
   const [stage, setStage] = useState(0)
   const [finished, setFinished] = useState(false)
+  const [hasPlayed, setHasPlayed] = useState(false)
+  const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStage(1), 1700),
-      setTimeout(() => setStage(2), 3500),
-      setTimeout(() => setStage(3), 5300),
+      setTimeout(() => setStage(1), 2800),
+      setTimeout(() => setStage(2), 6000),
+      setTimeout(() => setStage(3), 9500),
     ]
     return () => timers.forEach(clearTimeout)
   }, [])
 
+  // The closing message normally waits for the recording to end (onEnded). These
+  // timers only guarantee she is never left without a way forward: a phone that
+  // never starts the recording, or a pause she never comes back from.
   useEffect(() => {
-    if (stage < 3) return
-    const timer = setTimeout(() => setFinished(true), src ? 20000 : 1500)
+    if (stage < 3 || !src) return
+    const delay = !hasPlayed ? 30000 : playing ? 0 : 45000
+    if (delay === 0) return
+    const timer = setTimeout(() => setFinished(true), delay)
+    return () => clearTimeout(timer)
+  }, [stage, src, hasPlayed, playing])
+
+  useEffect(() => {
+    if (stage < 3 || src) return
+    const timer = setTimeout(() => setFinished(true), 3000)
     return () => clearTimeout(timer)
   }, [stage, src])
 
@@ -84,6 +97,10 @@ export function Scene5Voice({ src, onContinue }: Props) {
                 variant="voice"
                 fadeInMs={500}
                 onEnded={() => setFinished(true)}
+                onPlayingChange={(isPlaying) => {
+                  setPlaying(isPlaying)
+                  if (isPlaying) setHasPlayed(true)
+                }}
               />
 
               <AnimatePresence>

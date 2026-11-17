@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SceneShell } from '../components/SceneShell'
 import { Reveal } from '../components/Reveal'
@@ -15,18 +15,25 @@ type Props = {
 export function Scene6Cake({ musicSrc, photos, onContinue }: Props) {
   const [cut, setCut] = useState(false)
   const [reveal, setReveal] = useState(0)
+  // The parent re-creates this callback on every render (idle note, transitions),
+  // so it is read through a ref: otherwise the timers below would restart and the
+  // revealed lines would disappear and re-animate mid-scene.
+  const continueRef = useRef(onContinue)
+  useEffect(() => {
+    continueRef.current = onContinue
+  })
 
   useEffect(() => {
     if (!cut) return
     const timers = [
-      setTimeout(() => setReveal(1), 1400),
-      setTimeout(() => setReveal(2), 3200),
-      setTimeout(() => setReveal(3), 5200),
-      setTimeout(() => setReveal(4), 6800),
-      setTimeout(onContinue, 11000),
+      setTimeout(() => setReveal(1), 2400),
+      setTimeout(() => setReveal(2), 5500),
+      setTimeout(() => setReveal(3), 9000),
+      setTimeout(() => setReveal(4), 12500),
+      setTimeout(() => continueRef.current(), 32000),
     ]
     return () => timers.forEach(clearTimeout)
-  }, [cut, onContinue])
+  }, [cut])
 
   return (
     <SceneShell sceneKey="cake" tone="celebrate">
