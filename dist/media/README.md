@@ -1,11 +1,12 @@
 # Your media goes here
 
-Place your own files in this folder with these exact names:
+The files already here are used as-is:
 
-- `music-1.mp3` (or .wav / .m4a / .ogg) — first romantic music
-- `voice-message.mp3` (or .wav / .m4a / .ogg) — your actual recorded voice
-- `music-2.mp3` (or .wav / .m4a / .ogg) — cake celebration music
-- `photo-1.jpg` … `photo-6.jpg` — optional photographs (.png / .webp also work)
+- `music1.mp3` — first romantic music
+- `recording.m4a` — your actual recorded voice
+- `music 2.mp3` — cake celebration music
+
+The app also accepts these deploy names: `music-1.mp3`, `voice-message.mp3`, and `music-2.mp3` (or `.wav` / `.m4a` / `.ogg`), plus `photo-1.jpg` … `photo-6.jpg` for optional photographs (`.png` / `.webp` also work).
 
 The app never generates music or a voice. If a file is absent, that moment degrades gracefully.
 

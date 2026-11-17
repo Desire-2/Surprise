@@ -91,7 +91,7 @@ async function findStaticUrl(key: MediaSlot): Promise<string | null> {
   if (staticUrlCache.has(key)) return staticUrlCache.get(key) ?? null
   const base = import.meta.env.BASE_URL || './'
   for (const file of FILES_BY_SLOT[key]) {
-    const url = `${base}media/${file}`
+    const url = `${base}media/${encodeURIComponent(file)}`
     try {
       const response = await fetch(url, { method: 'HEAD', cache: 'no-store' })
       const type = response.headers.get('content-type') || ''
