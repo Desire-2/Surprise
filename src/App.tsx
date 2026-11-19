@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Atmosphere } from './components/Atmosphere'
+import { BackgroundMusic } from './components/BackgroundMusic'
 import { Icon } from './components/Icon'
 import { AssetStudio } from './components/AssetStudio'
 import { fadeOutActiveAudio } from './components/AudioPlayer'
@@ -121,9 +122,17 @@ export default function App() {
 
   const photos = PHOTO_SLOTS.map((slot) => media[slot]?.url).filter((url): url is string => Boolean(url))
 
+  // Scenes with their own soundtrack take over the sound. If their file is
+  // missing, there is nothing to take over, so the background keeps playing.
+  const sceneHasOwnAudio =
+    (scene === 2 && Boolean(media['music-1']?.url)) ||
+    (scene === 4 && Boolean(media.voice?.url)) ||
+    (scene === 5 && Boolean(media['music-2']?.url))
+
   return (
     <div className="app-shell">
       <Atmosphere />
+      <BackgroundMusic src={media.background?.url ?? null} enabled={!sceneHasOwnAudio} />
       <main className="app-main">
         <header className="scene-header">
           {scene > 0 ? (

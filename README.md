@@ -20,6 +20,7 @@ Put your own files in `public/media/` using these exact names:
 | First romantic music | `music-1.mp3`, `music-1.wav`, `music-1.m4a`, `music-1.ogg` |
 | Your voice recording | `voice-message.mp3`, `voice-message.wav`, `voice-message.m4a`, `voice-message.ogg` |
 | Cake celebration music | `music-2.mp3`, `music-2.wav`, `music-2.m4a`, `music-2.ogg` |
+| Background music | `background.mp3`, `background.m4a`, `background.wav`, `background.ogg` |
 | Photos (optional) | `photo-1.jpg` … `photo-6.jpg` (png/webp also accepted) |
 
 Nothing is substituted: if a file is missing, that moment simply shows a gentle "still being prepared" message.
