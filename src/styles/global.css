@@ -277,6 +277,28 @@ body:has(.scene--celebrate) .backdrop-glow {
 .back-button:hover { background: rgba(216, 179, 107, 0.1); }
 .back-button:active { transform: scale(0.92); }
 
+.music-toggle {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(216, 179, 107, 0.26);
+  border-radius: 50%;
+  background: rgba(26, 7, 16, 0.45);
+  color: var(--faint);
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.music-toggle[aria-pressed='true'] {
+  background: rgba(216, 179, 107, 0.16);
+  border-color: rgba(216, 179, 107, 0.5);
+  color: var(--gold);
+}
+
+.music-toggle:hover { background: rgba(216, 179, 107, 0.14); color: var(--gold-soft); }
+.music-toggle:active { transform: scale(0.92); }
+
 .scene {
   flex: 1;
   width: 100%;

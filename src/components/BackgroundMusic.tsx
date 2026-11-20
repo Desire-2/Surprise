@@ -1,11 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react'
+
+export type BackgroundMusicHandle = {
+  /** Called synchronously from the toggle click so mobile browsers accept it. */
+  play: () => void
+}
 
 type Props = {
   src: string | null
   enabled: boolean
+  playing: boolean
   volume?: number
   fadeMs?: number
 }
+
+/** Background sound never goes louder than 30%, however it is requested. */
+const MAX_VOLUME = 0.3
 
 /**
  * One persistent audio element for the whole story. It is mounted outside the
@@ -13,23 +22,23 @@ type Props = {
  * itself at the end, and scenes with their own music or voice simply fade it
  * down and pause it; it resumes from the same position afterwards.
  */
-export function BackgroundMusic({ src, enabled, volume = 0.3, fadeMs = 1400 }: Props) {
+export const BackgroundMusic = forwardRef<BackgroundMusicHandle, Props>(function BackgroundMusic(
+  { src, enabled, playing, volume = MAX_VOLUME, fadeMs = 1400 },
+  ref,
+) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const rafRef = useRef(0)
-  const stateRef = useRef({ src, enabled })
-  stateRef.current = { src, enabled }
-  // Try to start on its own a few seconds after the page is ready. Browsers
-  // that require a gesture will reject that attempt, so taps/keypresses remain
-  // as a retry path below.
-  const [autoReady, setAutoReady] = useState(false)
-  // Browsers refuse to start sound without a user gesture. Every tap/keypress
-  // retries the play, so a blocked first attempt can succeed on the next one.
-  const [gestures, setGestures] = useState(0)
+  const targetVolume = Math.min(volume, MAX_VOLUME)
 
-  useEffect(() => {
-    const timer = setTimeout(() => setAutoReady(true), 5000)
-    return () => clearTimeout(timer)
-  }, [])
+  useImperativeHandle(
+    ref,
+    () => ({
+      play: () => {
+        if (audioRef.current) void audioRef.current.play().catch(() => {})
+      },
+    }),
+    [],
+  )
 
   const animateVolume = useCallback(
     (target: number, onDone?: () => void) => {
@@ -60,30 +69,10 @@ export function BackgroundMusic({ src, enabled, volume = 0.3, fadeMs = 1400 }: P
   )
 
   useEffect(() => {
-    // Call play() inside the gesture itself: some mobile browsers only grant
-    // audio permission while the event is being handled.
-    const onGesture = () => {
-      const { src: currentSrc, enabled: isEnabled } = stateRef.current
-      if (currentSrc && isEnabled) void audioRef.current?.play().catch(() => {})
-      setGestures((count) => count + 1)
-    }
-    window.addEventListener('pointerdown', onGesture, { passive: true })
-    window.addEventListener('touchstart', onGesture, { passive: true })
-    window.addEventListener('click', onGesture)
-    window.addEventListener('keydown', onGesture)
-    return () => {
-      window.removeEventListener('pointerdown', onGesture)
-      window.removeEventListener('touchstart', onGesture)
-      window.removeEventListener('click', onGesture)
-      window.removeEventListener('keydown', onGesture)
-    }
-  }, [])
-
-  useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
     let cancelled = false
-    const shouldPlay = Boolean(src) && enabled && (autoReady || gestures > 0)
+    const shouldPlay = Boolean(src) && enabled && playing
     if (!shouldPlay) {
       animateVolume(0, () => {
         if (!audio.paused) audio.pause()
@@ -91,17 +80,17 @@ export function BackgroundMusic({ src, enabled, volume = 0.3, fadeMs = 1400 }: P
     } else {
       const result = audio.play()
       if (result && typeof result.then === 'function') {
-        // Only fade in once the browser confirms playback; otherwise a blocked
-        // autoplay would raise the slider to full on a silent element.
+        // Only fade in once the browser confirms playback; a blocked attempt
+        // must never leave a silent element sitting at full volume.
         result
           .then(() => {
-            if (!cancelled) animateVolume(volume)
+            if (!cancelled) animateVolume(targetVolume)
           })
           .catch(() => {
             if (!cancelled) animateVolume(0)
           })
       } else {
-        animateVolume(volume)
+        animateVolume(targetVolume)
       }
     }
     return () => {
@@ -109,7 +98,7 @@ export function BackgroundMusic({ src, enabled, volume = 0.3, fadeMs = 1400 }: P
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       rafRef.current = 0
     }
-  }, [src, enabled, autoReady, gestures, volume, animateVolume])
+  }, [src, enabled, playing, targetVolume, animateVolume])
 
   return (
     <audio
@@ -122,8 +111,8 @@ export function BackgroundMusic({ src, enabled, volume = 0.3, fadeMs = 1400 }: P
         // that still report an ended event for a looping element.
         const audio = event.currentTarget
         audio.currentTime = 0
-        if (enabled) void audio.play().catch(() => {})
+        if (enabled && playing) void audio.play().catch(() => {})
       }}
     />
   )
-}
+})

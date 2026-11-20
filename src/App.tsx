@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Atmosphere } from './components/Atmosphere'
-import { BackgroundMusic } from './components/BackgroundMusic'
+import { BackgroundMusic, type BackgroundMusicHandle } from './components/BackgroundMusic'
 import { Icon } from './components/Icon'
 import { AssetStudio } from './components/AssetStudio'
 import { fadeOutActiveAudio } from './components/AudioPlayer'
@@ -29,7 +29,9 @@ export default function App() {
   const [scene, setScene] = useState(0)
   const [transition, setTransition] = useState<string | null>(null)
   const [showIdle, setShowIdle] = useState(false)
+  const [backgroundOn, setBackgroundOn] = useState(false)
   const [studioOpen, setStudioOpen] = useState(() => window.location.hash === '#studio')
+  const backgroundRef = useRef<BackgroundMusicHandle>(null)
   const transitionTimer = useRef(0)
   const reduce = useReducedMotion()
   const { media, config, refreshMedia, refreshConfig } = useMediaLibrary()
@@ -132,7 +134,12 @@ export default function App() {
   return (
     <div className="app-shell">
       <Atmosphere />
-      <BackgroundMusic src={media.background?.url ?? null} enabled={!sceneHasOwnAudio} />
+      <BackgroundMusic
+        ref={backgroundRef}
+        src={media.background?.url ?? null}
+        enabled={!sceneHasOwnAudio}
+        playing={backgroundOn}
+      />
       <main className="app-main">
         <header className="scene-header">
           {scene > 0 ? (
@@ -152,6 +159,23 @@ export default function App() {
               />
             ))}
           </div>
+          {media.background?.url ? (
+            <button
+              type="button"
+              className="music-toggle"
+              onClick={() => {
+                // Start inside the click handler: some mobile browsers only
+                // grant audio permission during the gesture itself.
+                if (!backgroundOn && !sceneHasOwnAudio && media.background?.url) backgroundRef.current?.play()
+                setBackgroundOn(!backgroundOn)
+              }}
+              aria-label={backgroundOn ? 'Stop background music' : 'Play background music'}
+              aria-pressed={backgroundOn}
+              title={backgroundOn ? 'Stop background music' : 'Play background music'}
+            >
+              <Icon name={backgroundOn ? 'pause' : 'play'} size={18} />
+            </button>
+          ) : null}
         </header>
 
         <AnimatePresence mode="wait" initial={false}>
